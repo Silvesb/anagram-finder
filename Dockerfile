@@ -22,6 +22,12 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
+# Ensure no cached configuration or routes ship with the image so
+# Render-provided environment variables take effect at runtime.
+RUN php artisan config:clear \
+    && php artisan route:clear \
+    && php artisan view:clear
+
 # Ensure Apache serves from the public directory
 RUN sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf /etc/apache2/apache2.conf
 
