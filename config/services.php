@@ -35,9 +35,4 @@ return [
         ],
     ],
 
-    'wordbase_importer' => [
-        'base_url' => env('ANAGRAM_SERVICE_URL'),
-        'timeout' => env('ANAGRAM_SERVICE_TIMEOUT', 10),
-    ],
-
 ];

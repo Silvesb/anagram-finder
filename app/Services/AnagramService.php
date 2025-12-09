@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use RuntimeException;
+use App\Models\Word;
 
 class AnagramService
 {
@@ -19,10 +18,21 @@ class AnagramService
     }
 
     /**
-     * Generate anagrams for the provided word by delegating to the upstream API.
+     * Generates signatures so we can group words by sorted letters.
      *
      * @param string $word
-     * @return array
+     * @return string
+     */
+    public function signature(string $word): string
+    {
+        $letters = preg_split('//u', $word, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        sort($letters);
+
+        return implode('', $letters);
+    }
+
+    /**
+     * Find words that share the same signature directly from the database.
      */
     public function findAnagrams(string $word): array
     {
@@ -32,24 +42,14 @@ class AnagramService
             return [];
         }
 
-        $baseUrl = rtrim((string) config('services.wordbase_importer.base_url'), '/');
+        $signature = $this->signature($parseable);
 
-        if ($baseUrl === '') {
-            throw new RuntimeException('Anagram service URL is not configured.');
-        }
-
-        $timeout = (int) config('services.wordbase_importer.timeout', 10);
-
-        $response = Http::timeout($timeout)
-            ->acceptJson()
-            ->post($baseUrl.'/api/anagrams', [
-                'word' => $parseable,
-            ]);
-
-        if (!$response->successful()) {
-            throw new RuntimeException('Failed to fetch anagrams from upstream service.');
-        }
-
-        return (array) data_get($response->json(), 'anagrams', []);
+        return Word::query()
+            ->where('signature', $signature)
+            ->where('word', '!=', $parseable)
+            ->pluck('word')
+            ->unique()
+            ->values()
+            ->all();
     }
 }
