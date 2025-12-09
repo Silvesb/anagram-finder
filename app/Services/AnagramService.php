@@ -32,13 +32,13 @@ class AnagramService
             return [];
         }
 
-        $baseUrl = rtrim((string) config('services.anagram_searcher.base_url'), '/');
+        $baseUrl = rtrim((string) config('services.wordbase_importer.base_url'), '/');
 
         if ($baseUrl === '') {
             throw new RuntimeException('Anagram service URL is not configured.');
         }
 
-        $timeout = (int) config('services.anagram_searcher.timeout', 10);
+        $timeout = (int) config('services.wordbase_importer.timeout', 10);
 
         $response = Http::timeout($timeout)
             ->acceptJson()
